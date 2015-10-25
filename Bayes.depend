@@ -1,0 +1,12 @@
+# depslib dependency file v1.0
+1445807444 source:/home/nacho/GigoTips/main.cpp
+	<iostream>
+	<fstream>
+	<cstdlib>
+	<map>
+	<string>
+	<cmath>
+	<set>
+	<vector>
+	<sstream>
+
