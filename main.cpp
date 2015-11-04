@@ -64,6 +64,7 @@ int *crearDiccionario(map<string, int> & indices) {
         }
         map<string, int>::iterator iteradorIndiceColumna3 = indices.find(distrito);
         if(iteradorIndiceColumna3 == indices.end())
+
         {
             indices.insert(pair<string, int> (distrito, columna));
             columna += 1;
@@ -124,11 +125,31 @@ string obtenerFranjaHoraria(string fecha)
     return franja;
 }
 
-void llenarMatriz(map<string, int> & indices, int & matrizFrecuencias) {
+void inicializarMatriz(int filas,int columnas,int **matriz) {
+    for(int i = 0; i < filas; i++){
+        for(int j = 0; j < columnas; j++){
+            matriz[i][j] = 0;
+        }
+    }
+}
+
+void mostrarMatriz(int filas,int columnas,int **matriz) {
+    for(int i = 0; i < filas; i++){
+        //cout << "fila:" << i << endl;
+        for(int j = 0; j < columnas; j++){
+            //cout << "columna" << j << endl;
+            cout << matriz[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
+
+
+void llenarMatriz(map<string, int> & indices, int **matrizFrecuencias) {
 
     ifstream archivo;
     string tipoDelito, descripcion, diaSemana, distrito, fecha, franjaHoraria, descarte, linea;
-
+    int filaDelito, columnaHora, columnaDiaSemana, columnaDistrito;
     archivo.open("archivos/train.csv");
 
     if(archivo.fail())
@@ -156,7 +177,16 @@ void llenarMatriz(map<string, int> & indices, int & matrizFrecuencias) {
 
         if (archivo.eof()) break;
 
-
+        /* Se obtiene la fila y las columnas correspondientes a la linea leida
+          para llenar la posicion [fila][columna] de la matriz con +1 */
+        filaDelito = indices[tipoDelito];
+        columnaHora = indices[franjaHoraria];
+        columnaDiaSemana = indices[diaSemana];
+        columnaDistrito = indices[distrito];
+        //cout << filaDelito << endl;
+        matrizFrecuencias[filaDelito][columnaHora] +=1;
+        matrizFrecuencias[filaDelito][columnaDiaSemana] += 1;
+        matrizFrecuencias[filaDelito][columnaDistrito] += 1;
 
     }
 
@@ -172,7 +202,13 @@ int main() {
     columnas = indicesFinales[1];
     cout <<  filas << columnas << endl;
 
-    int matrizFrecuencias[filas][columnas];
-    llenarMatriz(indices, matrizFrecuencias[filas][columnas]);
+    int** matrizFrecuencias =  new int *[filas];
+    for (int i = 0; i < filas; i++) {
+        matrizFrecuencias[i] = new int [columnas];
+    }
+
+    inicializarMatriz(filas, columnas, matrizFrecuencias);
+    llenarMatriz(indices, matrizFrecuencias);
+    mostrarMatriz(filas,columnas,matrizFrecuencias);
     return 0;
 }
