@@ -9,13 +9,15 @@
 #include <sstream>
 
 using namespace std;
+
 bool tieneComilla(string linea);
 string obtenerFranjaHoraria(string fecha);
 
-void procesarArchivo(map<string, int> & indices) {
+int *crearDiccionario(map<string, int> & indices) {
     ifstream archivo;
     string tipoDelito, descripcion, diaSemana, distrito, fecha, franjaHoraria, descarte, linea;
     int fila, columna;
+    int *indicesFinales = new int[2];
     archivo.open("archivos/train.csv");
     fila = 0;
     columna = 0;
@@ -27,6 +29,7 @@ void procesarArchivo(map<string, int> & indices) {
     getline(archivo, descarte, '\n');
     while(true)
     {
+
         getline(archivo, fecha,',');
         franjaHoraria = obtenerFranjaHoraria(fecha);
         getline(archivo, tipoDelito, ',' );
@@ -39,6 +42,7 @@ void procesarArchivo(map<string, int> & indices) {
         getline(archivo, diaSemana, ',' );
         getline(archivo, distrito, ',' );
         getline(archivo, descarte, '\n' );
+
         if (archivo.eof()) break;
         map<string, int>::iterator iteradorIndiceFila = indices.find(tipoDelito);
         if(iteradorIndiceFila == indices.end())
@@ -64,17 +68,21 @@ void procesarArchivo(map<string, int> & indices) {
             indices.insert(pair<string, int> (distrito, columna));
             columna += 1;
         }
+
     }
 
     archivo.close();
-     map<string, int>::iterator iteradorIndice = indices.begin();
-     cout << "El tamaño del diccionario es: " << indices.size() << endl;
+    map<string, int>::iterator iteradorIndice = indices.begin();
+    cout << "El tamaño del diccionario es: " << indices.size() << endl;
     while (iteradorIndice != indices.end())
     {
         cout << "El feature/delito es: " << iteradorIndice->first << " Y su fila/columna es: " << iteradorIndice->second << endl;
         iteradorIndice ++;
 
     }
+    indicesFinales[0] = fila;
+    indicesFinales[1] = columna;
+    return indicesFinales;
 }
 
 bool tieneComilla(string linea)
@@ -116,9 +124,55 @@ string obtenerFranjaHoraria(string fecha)
     return franja;
 }
 
-int main()
-{
+void llenarMatriz(map<string, int> & indices, int & matrizFrecuencias) {
+
+    ifstream archivo;
+    string tipoDelito, descripcion, diaSemana, distrito, fecha, franjaHoraria, descarte, linea;
+
+    archivo.open("archivos/train.csv");
+
+    if(archivo.fail())
+    {
+        cout << "Error al abrir el archivo train.csv" << endl;
+    }
+
+    getline(archivo, descarte, '\n');
+
+    while(true)
+    {
+
+        getline(archivo, fecha,',');
+        franjaHoraria = obtenerFranjaHoraria(fecha);
+        getline(archivo, tipoDelito, ',' );
+        getline(archivo, descripcion, ',' );
+            if (tieneComilla(descripcion))
+            {
+                getline(archivo,descripcion, '"');
+                getline(archivo,descripcion, ',');
+            }
+        getline(archivo, diaSemana, ',' );
+        getline(archivo, distrito, ',' );
+        getline(archivo, descarte, '\n' );
+
+        if (archivo.eof()) break;
+
+
+
+    }
+
+}
+
+
+int main() {
+    int filas, columnas;
+    int *indicesFinales = new int[2];
     map<string, int> indices;
-    procesarArchivo(indices);
+    indicesFinales = crearDiccionario(indices); //Creamos el diccionario de los indices de la matriz
+    filas = indicesFinales[0];
+    columnas = indicesFinales[1];
+    cout <<  filas << columnas << endl;
+
+    int matrizFrecuencias[filas][columnas];
+    llenarMatriz(indices, matrizFrecuencias[filas][columnas]);
     return 0;
 }
