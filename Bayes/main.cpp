@@ -263,5 +263,10 @@ int main() {
         delete [] matrizFrecuencias[i];
     }
     delete [] matrizFrecuencias;
+
+    for (int i = 0; i < filas; i++) {
+        delete [] matrizProbabilidades[i];
+    }
+    delete [] matrizProbabilidades;
     return 0;
 }
