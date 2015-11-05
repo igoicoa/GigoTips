@@ -133,10 +133,10 @@ void inicializarMatriz(int filas,int columnas,int **matriz) {
     }
 }
 
-void mostrarMatriz(int filas,int columnas,int **matriz) {
-    for(int i = 0; i < filas; i++){
+void mostrarMatrizInt(int filas, int columnas, int **matriz) {
+    for(int i = 0; i < filas; i++) {
         //cout << "fila:" << i << endl;
-        for(int j = 0; j < columnas; j++){
+        for(int j = 0; j < columnas; j++) {
             //cout << "columna" << j << endl;
             cout << matriz[i][j] << " ";
         }
@@ -144,8 +144,18 @@ void mostrarMatriz(int filas,int columnas,int **matriz) {
     }
 }
 
+void mostrarMatrizFloat(int filas, int columnas, float **matriz) {
+    for(int i = 0; i < filas; i++) {
+        //cout << "fila:" << i << endl;
+        for(int j = 0; j < columnas; j++) {
+            //cout << "columna" << j << endl;
+            cout << matriz[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
 
-void llenarMatriz(map<string, int> & indices, int **matrizFrecuencias) {
+void llenarMatrizFrecuencias(map<string, int> & indices, int **matrizFrecuencias) {
 
     ifstream archivo;
     string tipoDelito, descripcion, diaSemana, distrito, fecha, franjaHoraria, descarte, linea;
@@ -192,6 +202,36 @@ void llenarMatriz(map<string, int> & indices, int **matrizFrecuencias) {
 
 }
 
+void llenarVector(int filas, int columnas, float *vectorSumaColumnas, int **matrizFrec) {
+    int j = 0;
+    while (j < columnas) {
+        for (int i = 0; i < filas; i++) {
+            vectorSumaColumnas[j] += matrizFrec[i][j];
+        }
+        cout << vectorSumaColumnas[j] << endl;
+        j ++;
+    }
+}
+
+void inicializarVector (int posiciones, float *vectorSumaColumnas) {
+    float cero = 0;
+    for (int i = 0; i < posiciones; i++) {
+        vectorSumaColumnas[i] = cero;
+    }
+}
+
+void llenarMatrizProbabilidades(int filas, int columnas, float **matrizProb, int **matrizFrec) {
+    float * vectorSumaColumnas = new float[columnas];
+    inicializarVector(columnas, vectorSumaColumnas);
+    llenarVector(filas, columnas, vectorSumaColumnas, matrizFrec);
+    for (int i = 0; i < filas; i++) {
+        for (int j = 0; j < columnas; j++) {
+            matrizProb[i][j] = matrizFrec[i][j]/vectorSumaColumnas[j];
+        }
+    }
+    delete [] vectorSumaColumnas;
+}
+
 
 int main() {
     int filas, columnas;
@@ -208,7 +248,20 @@ int main() {
     }
 
     inicializarMatriz(filas, columnas, matrizFrecuencias);
-    llenarMatriz(indices, matrizFrecuencias);
-    mostrarMatriz(filas,columnas,matrizFrecuencias);
+    llenarMatrizFrecuencias(indices, matrizFrecuencias);
+    mostrarMatrizInt(filas, columnas, matrizFrecuencias);
+
+    float** matrizProbabilidades =  new float *[filas];
+    for (int i = 0; i < filas; i++) {
+        matrizProbabilidades[i] = new float [columnas];
+    }
+
+    llenarMatrizProbabilidades(filas, columnas, matrizProbabilidades, matrizFrecuencias);
+    mostrarMatrizFloat(filas, columnas, matrizProbabilidades);
+
+    for (int i = 0; i < filas; i++) {
+        delete [] matrizFrecuencias[i];
+    }
+    delete [] matrizFrecuencias;
     return 0;
 }
