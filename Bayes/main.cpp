@@ -270,7 +270,8 @@ void calculoDeProbabilidades(int columnas, int filas, int **matrizFrec, float **
 }
 
 void clasificarDelito(float **matrizProbabilidades, float *vectorResultados, float *vectorProbabilidades, string franjaHoraria, string diaSemana, string distrito, int filas, map<string, int> & indices) {
-    int j, k, l;
+    int j = 0, k = 0, l = 0;
+//    float probabilidadTotal = 0;
     for(int i = 0; i < filas; i++) {
         map<string, int>::iterator iteradorIndice = indices.find(franjaHoraria);
         if (iteradorIndice != indices.end()){
@@ -285,8 +286,16 @@ void clasificarDelito(float **matrizProbabilidades, float *vectorResultados, flo
             l = iteradorIndice -> second;
         }
 
-        vectorResultados[i] = log (vectorProbabilidades[i]) + log(matrizProbabilidades[i][j]) + log(matrizProbabilidades[i][k]) + log(matrizProbabilidades[i][l]);
+        vectorResultados[i] = (vectorProbabilidades[i]) * (matrizProbabilidades[i][j]) * (matrizProbabilidades[i][k]) * (matrizProbabilidades[i][l]);
     }
+    /*for (int m = 0; m < filas; m++)
+    {
+        probabilidadTotal = probabilidadTotal + vectorResultados[m];
+    }
+    for (int n = 0; n < filas; n++)
+    {
+        vectorResultados[n] = 1 - (vectorResultados[n] / probabilidadTotal);
+    }*/
 }
 
 void clasificacion(int filas, int columnas, float **matrizProbabilidades, float *vectorProbabilidades, map<string, int> & indices){
@@ -308,7 +317,8 @@ void clasificacion(int filas, int columnas, float **matrizProbabilidades, float 
     {
         cout << "Error al abrir el archivo archivoBayes.csv" << endl;
     }
-
+    archivoSalida << "Id,ARSON,ASSAULT,BAD CHECKS,BRIBERY,BURGLARY,DISORDERLY CONDUCT,DRIVING UNDER THE INFLUENCE,DRUG/NARCOTIC,DRUNKENNESS,EMBEZZLEMENT,EXTORTION,FAMILY OFFENSES,FORGERY/COUNTERFEITING,FRAUD,GAMBLING,KIDNAPPING,LARCENY/THEFT,LIQUOR LAWS,LOITERING,MISSING PERSON,NON-CRIMINAL,OTHER OFFENSES,PORNOGRAPHY/OBSCENE MAT,PROSTITUTION,RECOVERED VEHICLE,ROBBERY,RUNAWAY,SECONDARY CODES,SEX OFFENSES FORCIBLE,SEX OFFENSES NON FORCIBLE,STOLEN PROPERTY,SUICIDE,SUSPICIOUS OCC,TREA,TRESPASS,VANDALISM,VEHICLE THEFT,WARRANTS,WEAPON LAWS" << endl;
+    int contador = 0;
     while(true){
 
         if (archivo.eof()) break;
@@ -316,16 +326,21 @@ void clasificacion(int filas, int columnas, float **matrizProbabilidades, float 
         getline(archivo, fecha,',');
         franjaHoraria = obtenerFranjaHoraria(fecha);
         getline(archivo, diaSemana, ',' );
-        getline(archivo, distrito, '\n');
+        getline(archivo, distrito, ',');
+        getline(archivo, descarte, '\n');
 
         clasificarDelito(matrizProbabilidades, vectorResultados, vectorProbabilidades, franjaHoraria, diaSemana, distrito, filas, indices);
 
         archivoSalida << id << ',';
-        for(int i = 0; i < filas; i++) {
+        for(int i = 0; i < filas-1; i++) {
             archivoSalida << vectorResultados[i] << ',';
         }
-        archivoSalida << endl;
-
+        archivoSalida << vectorResultados[filas-1];
+        cout << "clasifico y escribio delito " << contador << endl;
+        contador ++;
+        if (!(archivo.eof())){
+            archivoSalida << endl;
+        }
     }
 
 }
