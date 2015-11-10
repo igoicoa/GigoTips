@@ -4,3 +4,6 @@ Repositorio de Datos
 		   PERO USAR GIT DESDE AFUERA DE LA CARPETA Bayes 
 		   ES DECIR, add/commit/push/etc DESDE GigoTips.
 		   :)
+
+10/11/2015 PUSHEAR SIN LA CARPETA ARCHIVOS
+

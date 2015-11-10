@@ -1,0 +1,12 @@
+# depslib dependency file v1.0
+1447102075 source:/home/rocio/GigoTips/KNN/main.cpp
+	<iostream>
+	<fstream>
+	<cstdlib>
+	<map>
+	<string>
+	<cmath>
+	<set>
+	<vector>
+	<sstream>
+

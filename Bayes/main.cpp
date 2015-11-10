@@ -271,7 +271,7 @@ void calculoDeProbabilidades(int columnas, int filas, int **matrizFrec, float **
 
 void clasificarDelito(float **matrizProbabilidades, float *vectorResultados, float *vectorProbabilidades, string franjaHoraria, string diaSemana, string distrito, int filas, map<string, int> & indices) {
     int j = 0, k = 0, l = 0;
-//    float probabilidadTotal = 0;
+
     for(int i = 0; i < filas; i++) {
         map<string, int>::iterator iteradorIndice = indices.find(franjaHoraria);
         if (iteradorIndice != indices.end()){
@@ -288,14 +288,6 @@ void clasificarDelito(float **matrizProbabilidades, float *vectorResultados, flo
 
         vectorResultados[i] = (vectorProbabilidades[i]) * (matrizProbabilidades[i][j]) * (matrizProbabilidades[i][k]) * (matrizProbabilidades[i][l]);
     }
-    /*for (int m = 0; m < filas; m++)
-    {
-        probabilidadTotal = probabilidadTotal + vectorResultados[m];
-    }
-    for (int n = 0; n < filas; n++)
-    {
-        vectorResultados[n] = 1 - (vectorResultados[n] / probabilidadTotal);
-    }*/
 }
 
 void clasificacion(int filas, int columnas, float **matrizProbabilidades, float *vectorProbabilidades, map<string, int> & indices){
