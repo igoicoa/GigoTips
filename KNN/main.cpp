@@ -7,8 +7,12 @@
 #include <set>
 #include <vector>
 #include <sstream>
+#include <unistd.h>
+#include <sys/stat.h>
 
 const int MASPROBABLES = 6;
+const int CANTIDAD_DELITOS = 1000;
+const int FEATURES = 5;
 
 using namespace std;
 
@@ -41,10 +45,68 @@ string reemplazadorDeBarrasPorEspacio (string categoria){
     return categoria;
 }
 
+string obtenerAnio(string fechaHora)
+{
+    string anioStr;
+    anioStr = fechaHora.substr(0,4);
+    return anioStr;
+}
+
+string obtenerFranjaHoraria(string fecha)
+{
+    string horaStr;
+    string franja;
+    horaStr = fecha.substr(11, 2);
+    int hora = atoi(horaStr.c_str());
+    if (hora < 3)
+    {
+        franja = "MadrugadaI";
+    }
+
+    if ((hora >= 3) && (hora < 6))
+    {
+        franja = "MadrugadaII";
+    }
+
+    if ((hora >= 6) && (hora < 9))
+    {
+        franja = "ManianaI";
+    }
+
+    if ((hora >= 9) && (hora < 12))
+    {
+        franja = "ManianaII";
+    }
+
+    if ((hora >= 12) && (hora < 15))
+    {
+        franja = "MedioDia";
+    }
+
+    if ((hora >= 15) && (hora < 18))
+    {
+        franja = "TardeI";
+    }
+
+    if ((hora >= 18) && (hora < 21))
+    {
+        franja = "TardeII";
+    }
+
+    if ((hora >= 21) && (hora < 24))
+    {
+        franja = "NocheI";
+    }
+
+
+    return franja;
+}
+
 void crearArchivosPorDelito(){
     ifstream archivo;
     ofstream archivoSalida;
-    string fechaHora, hora, fecha, categoria, diaSemana, coordenadaX, coordenadaY, descarte, ruta, strLinea;
+    ifstream archivoVerificar;
+    string fechaHora, hora, franjaHoraria, fecha, anio, categoria, diaSemana, coordenadaX, coordenadaY, descarte, ruta, strLinea;
     archivo.open("../archivos/train.csv");
     if(archivo.fail())
     {
@@ -54,8 +116,10 @@ void crearArchivosPorDelito(){
     while(true){
         if (archivo.eof()) break;
         getline(archivo, fechaHora,',');
+        franjaHoraria = obtenerFranjaHoraria(fechaHora);
         hora = obtenerHora(fechaHora);
         fecha = obtenerFecha(fechaHora);
+        anio = obtenerAnio(fechaHora);
         getline(archivo, categoria,',');
         getline(archivo, descarte,',');
         if (tieneComilla(descarte)){
@@ -73,9 +137,9 @@ void crearArchivosPorDelito(){
         getline(archivo, coordenadaX, ',');
         getline(archivo, coordenadaY, '\n');
         categoria = reemplazadorDeBarrasPorEspacio(categoria);
-        ruta = "../archivos/delitos/" + categoria + ".csv";
-        archivoSalida.open(ruta.c_str(), std::ios::app);
+        ruta = "../archivos/delitos/" + categoria + "-" + franjaHoraria + "-" + anio + ".csv";
         strLinea = hora + "," + fecha + "," + diaSemana + "," + coordenadaX + "," + coordenadaY;
+        archivoSalida.open(ruta.c_str(), std::ios::app);
         archivoSalida << strLinea << endl;
         archivoSalida.close();
     }
@@ -96,6 +160,30 @@ void inicializarMatriz(int filas,int columnas,float **matriz) {
             matriz[i][j] = 0;
         }
     }
+}
+
+void limpiarArchivoDeResultados() {
+    ofstream archivoDeDistancias;
+    string nombreDelArchivoDeDistancias = "../archivos/archivoDistancias.csv";
+    archivoDeDistancias.open(nombreDelArchivoDeDistancias.c_str());
+    archivoDeDistancias.clear();
+}
+
+void calcularDistancias(string vectorAClasificar[], string vectorDelito[], string tipoDeDelito) {
+    ofstream archivoDeDistancias;
+    string nombreDelArchivoDeDistancias = "../archivos/archivoDistancias.csv";
+    archivoDeDistancias.open(nombreDelArchivoDeDistancias.c_str(), std::ios::app);
+    float distancia;
+    archivoDeDistancias << tipoDeDelito;
+//    distancia = calcularDistanciaFecha(vectorAClasificar[0], vectorDelDelito[0]);
+//    archivoDeDistancias << distancia << ",";
+//    distancia = calcularDistanciaDiaSemana(vectorAClasificar[1], vectorDelDelito[1]);
+//    archivoDeDistancias << distancia << ",";
+//    distancia = calcularDistanciaCoordanadas(vectorAClasificar[2], vectorDelDelito[2]);
+//    archivoDeDistancias << distancia << ",";
+//    distancia = calcularDistanciaCoordenadas(vectorAClasificar[3], vectorDelDelito[3]);
+//    archivoDeDistancias << distancia << endl;
+
 }
 
 void llenarDelitos(map<int, string> & indices, int cantidadDelitos){
@@ -160,12 +248,13 @@ void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int can
     ifstream resultadosBayes;
     ifstream test;
     ifstream archivoDelDelito;
-    string descarte, strProbabilidad, idTest, fechaHora, fecha, hora, diaSemana, coordenadaX, coordenadaY, delito;
+    string descarte, strProbabilidad, idTest, fechaHora, fecha, hora, anio, franjaHoraria, diaSemana, coordenadaX, coordenadaY, delito;
+    string fechaHoraTest, fechaTest, horaTest, diaSemanaTest,coordenadaXTest, coordenadaYTest;
     string strID, ruta;
-    float *vectorAClasificar = new float [5];
-    float *vectorTrain = new float [5];
-    float *vectorDistancias =
-    int id = 0, contador;
+    string*vectorAClasificar = new string [FEATURES];
+    string *vectorDelito = new string [FEATURES];
+    float *vectorDistancias = new float [FEATURES];
+    int id = 0, contador, i;
     int numeroDelito = 0;
     double doubleProbabilidad = 0;
     float probabilidad = 0;
@@ -182,19 +271,21 @@ void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int can
         matrizProbabilidades[0][0] = id;
         matrizProbabilidades[1][0] = id;
         getline(test, idTest,',');
-        getline(test, fechaHora,',');
-        hora = obtenerHora(fechaHora);
-        fecha = obtenerFecha(fechaHora);
-        getline(test, diaSemana, ',');
+        getline(test, fechaHoraTest,',');
+        franjaHoraria = obtenerFranjaHoraria(fechaHoraTest);
+        hora = obtenerHora(fechaHoraTest);
+        fecha = obtenerFecha(fechaHoraTest);
+        anio = obtenerAnio(fechaHoraTest);
+        getline(test, diaSemanaTest, ',');
         getline(test, descarte, ',');
         getline(test, descarte, ',');
-        getline(test, coordenadaX, ',');
-        getline(test, coordenadaY, '\n');
-        vectorAClasificar[0] = fecha;
-        vectorAClasificar[1] = hora;
-        vectorAClasificar[2] = diaSemana;
-        vectorAClasificar[3] = coordenadaX;
-        vectorAClasificar[4] = coordenadaY;
+        getline(test, coordenadaXTest, ',');
+        getline(test, coordenadaYTest, '\n');
+        vectorAClasificar[0] = fechaTest;
+        vectorAClasificar[1] = horaTest;
+        vectorAClasificar[2] = diaSemanaTest;
+        vectorAClasificar[3] = coordenadaXTest;
+        vectorAClasificar[4] = coordenadaYTest;
         while (contador < 40) {
             if (contador == 39) {
                 getline(resultadosBayes, strProbabilidad, '\n');
@@ -209,13 +300,28 @@ void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int can
             contador ++;
         }
         if (idTest == strID) {
+            limpiarArchivoDeResultados();
             for (int j = 1; j < MASPROBABLES; j ++) {
                 numeroDelito = (int) matrizProbabilidades[0][j];
                 delito = indices.at(numeroDelito);
-                ruta = "../archivos/delitos/" + delito + ".csv";
+                ruta = "../archivos/delitos/" + delito + "-" + franjaHoraria + "-" + anio + ".csv";
                 archivoDelDelito.open(ruta.c_str());
                 while (true) {
+                    i = 0;
                     if (archivoDelDelito.eof()) break;
+                    getline(archivoDelDelito, hora, ',' );
+                    getline(archivoDelDelito, fecha, ',' );
+                    vectorDelito[i] = fecha;
+                    i++;
+                    getline(archivoDelDelito, diaSemana, ',' );
+                    vectorDelito[i] = diaSemana;
+                    i++;
+                    getline(archivoDelDelito, coordenadaX, ',' );
+                    vectorDelito[i] = coordenadaX;
+                    i++;
+                    getline(archivoDelDelito, coordenadaY, '\n' );
+                    vectorDelito[i] = coordenadaY;
+                    calcularDistancias(vectorAClasificar, vectorDelito, delito);
 
 
                 }
@@ -247,8 +353,8 @@ int main() {
     }
 
 
-    inicializarMatriz(filas, MASPROBABLES, matrizProbabilidades);
-    leerBayes(indices, matrizProbabilidades, cantidadDelitosTotales);
+    //inicializarMatriz(filas, MASPROBABLES, matrizProbabilidades);
+    //leerBayes(indices, matrizProbabilidades, cantidadDelitosTotales);
 
 
     for (int i = 0; i < filas; i++) {
