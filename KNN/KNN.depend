@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1447277281 source:/home/noe/GigoTips/KNN/main.cpp
+1447866924 source:/home/noe/GigoTips/KNN/main.cpp
 	<iostream>
 	<fstream>
 	<cstdlib>
@@ -9,6 +9,8 @@
 	<set>
 	<vector>
 	<sstream>
+	<unistd.h>
+	<sys/stat.h>
 
 1447575495 source:/home/nacho/GigoTips/KNN/main.cpp
 	<iostream>

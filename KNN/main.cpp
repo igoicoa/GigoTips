@@ -14,6 +14,7 @@ const int MASPROBABLES = 6;
 const int CANTIDAD_DELITOS = 1000;
 const int FEATURES = 4;
 const int K = 30;
+const int CANTIDAD_TEST = 884261;
 
 using namespace std;
 
@@ -259,14 +260,20 @@ void calcularDistancias(string vectorAClasificar[], string vectorDelDelito[], st
     ofstream archivoDeDistancias;
     string nombreDelArchivoDeDistancias = "../archivos/archivoDistancias.csv";
     archivoDeDistancias.open(nombreDelArchivoDeDistancias.c_str(), std::ios::app);
-    float distancia1 = 0, distancia2 = 0, distancia3 = 0, distancia4 = 0, distanciaTotal = 0;
+    //float distancia1 = 0;
+    //float distancia2 = 0;
+    float distancia3 = 0;
+    float distancia4 = 0;
+    float distanciaTotal = 0;
+
     archivoDeDistancias << tipoDeDelito << ",";
-    distancia1 = calcularDistanciaFecha(vectorAClasificar[0], vectorDelDelito[0]);
-    distancia2 = calcularDistanciaDiaSemana(vectorAClasificar[1], vectorDelDelito[1]);
+    //distancia1 = calcularDistanciaFecha(vectorAClasificar[0], vectorDelDelito[0]);
+    //distancia2 = calcularDistanciaDiaSemana(vectorAClasificar[1], vectorDelDelito[1]);
     distancia3 = calcularDistanciaCoordenadas(vectorAClasificar[2], vectorDelDelito[2]);
     distancia4 = calcularDistanciaCoordenadas(vectorAClasificar[3], vectorDelDelito[3]);
 
-    distanciaTotal = sqrt((distancia1*distancia1) + (distancia2*distancia2) +(distancia3*distancia3) + (distancia4*distancia4));
+    //distanciaTotal = sqrt((distancia1*distancia1) + (distancia2*distancia2) +(distancia3*distancia3) + (distancia4*distancia4));
+    distanciaTotal = sqrt((distancia3*distancia3) + (distancia4*distancia4));
     archivoDeDistancias << distanciaTotal << endl;
 
     archivoDeDistancias.close();
@@ -370,9 +377,60 @@ void obtenerKDelitosMasCercanos(float distancia, float delito, int contador, flo
     }
 }
 
+float obtenerElDelitoMasOcurrente(float **matrizDelitosMasCercanos, float ** matrizProbabilidades){
+    float idDelitoMasOcurrente = 0;
+    map<float, int> indices;
+    float idDelitoAInsertar = 0;
+    int frecuencia = 0;
 
-void aplicarKNN(int longitud, map<int, string> &indices){
-    int indiceDelito = 0;
+    idDelitoAInsertar = matrizDelitosMasCercanos[0][0];
+    indices.insert(pair<float, int> (idDelitoAInsertar, 1));
+    for(int i = 1; i < K; i++){
+        idDelitoAInsertar = matrizDelitosMasCercanos[0][i];
+        map<float, int>::iterator iteradorIndice = indices.find(idDelitoAInsertar);
+        if(iteradorIndice != indices.end()){
+            iteradorIndice -> second++;
+        }
+        else{
+            indices.insert(pair<float, int> (idDelitoAInsertar, 1));
+        }
+    }
+
+    map<float, int>::iterator iterador = indices.begin();
+    idDelitoMasOcurrente = iterador -> first;
+    frecuencia = iterador -> second;
+    float idActual = 0;
+    int frecuenciaActual = 0;
+
+    for (iterador = indices.begin(); iterador != indices.end(); iterador ++){
+        idActual = iterador -> first;
+        frecuenciaActual = iterador -> second;
+        if (frecuenciaActual > frecuencia){
+            idDelitoMasOcurrente = idActual;
+        }
+        if (frecuenciaActual == frecuencia){
+            float proba1 = 0;
+            float proba2 = 0;
+
+            for (int k = 1; k < MASPROBABLES; k ++) {
+                if (matrizProbabilidades[0][k] == idDelitoMasOcurrente){
+                    proba1 = matrizProbabilidades[1][k];
+                }
+                if (matrizProbabilidades[0][k] == idActual){
+                    proba2 = matrizProbabilidades[1][k];
+                }
+            }
+            if (proba2 > proba1){
+                idDelitoMasOcurrente = idActual;
+            }
+        }
+    }
+    return idDelitoMasOcurrente;
+
+}
+
+void aplicarKNN(int longitud, map<int, string> &indices, float **matrizProbabilidades, string id){
+    int indiceDelito = 0, idDelitoMasOcurrente = 0;
     ifstream archivoDistancias;
     ofstream resultadosKNN;
     map<string,float> diccionarioDistancias;
@@ -386,8 +444,11 @@ void aplicarKNN(int longitud, map<int, string> &indices){
     matrizDelitosMasCercanos[0] = new float [K];
     matrizDelitosMasCercanos[1] = new float [K];
 
+    inicializarMatriz(2, K, matrizDelitosMasCercanos);
+
     resultadosKNN.open(nombreDelArchivoResultados.c_str(), std::ios::app);
     archivoDistancias.open(nombreDelArchivoDeDistancias.c_str());
+    int contador = 0;
     for (int i = 0; i < longitud; i++){
         getline(archivoDistancias, delito, ',');
         getline(archivoDistancias, distanciaStr, '\n');
@@ -399,14 +460,47 @@ void aplicarKNN(int longitud, map<int, string> &indices){
                 iterador ++;
             }
         }
+
         indiceDelito = (float) (iterador -> first);
         distanciaDouble = atof(distanciaStr.c_str());
         distancia = (float)distanciaDouble;
-        obtenerKDelitosMasCercanos(distancia, indiceDelito, i, matrizDelitosMasCercanos);
+
+        obtenerKDelitosMasCercanos(distancia, indiceDelito, contador, matrizDelitosMasCercanos);
+        contador ++;
+    }
+
+    //mostrarMatrizFloat(2, K, matrizDelitosMasCercanos);
+    idDelitoMasOcurrente = (int)obtenerElDelitoMasOcurrente(matrizDelitosMasCercanos, matrizProbabilidades);
+
+    resultadosKNN << id << ',';
+    for(int i = 1; i < 39; i++) {
+        if (idDelitoMasOcurrente == i){
+            resultadosKNN << 1 << ',';
+        }
+        else {
+            resultadosKNN << 0 << ',';
+        }
+    }
+    if (idDelitoMasOcurrente == 39){
+        resultadosKNN << 1;
+    }
+    else {
+        resultadosKNN << 0;
+    }
+
+    int idDelito = atoi(id.c_str());
+
+    if (idDelito != CANTIDAD_TEST){
+        resultadosKNN << endl;
     }
 
     archivoDistancias.close();
     resultadosKNN.close();
+
+    for (int i = 0; i < 2; i++) {
+        delete [] matrizDelitosMasCercanos[i];
+    }
+    delete [] matrizDelitosMasCercanos;
 
 }
 void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int cantidadDelitos) {
@@ -495,7 +589,7 @@ void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int can
                 }
                 archivoDelDelito.close();
             }
-            aplicarKNN(longitud, indices);
+            aplicarKNN(longitud, indices, matrizProbabilidades, idTest);
         }
     }
     resultadosBayes.close();
