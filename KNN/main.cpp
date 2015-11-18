@@ -12,7 +12,8 @@
 
 const int MASPROBABLES = 6;
 const int CANTIDAD_DELITOS = 1000;
-const int FEATURES = 5;
+const int FEATURES = 4;
+const int K = 30;
 
 using namespace std;
 
@@ -169,20 +170,106 @@ void limpiarArchivoDeResultados() {
     archivoDeDistancias.clear();
 }
 
-void calcularDistancias(string vectorAClasificar[], string vectorDelito[], string tipoDeDelito) {
+void convertirFechaEnVector(string fecha, float *vectorFecha){
+    string anioStr, mesStr, diaStr;
+    double doubleAnio, doubleMes, doubleDia;
+    float anio, mes, dia;
+    anioStr = fecha.substr(0, 4);
+    doubleAnio = atof(anioStr.c_str());
+    anio = (float) doubleAnio;
+    anio = anio *365;
+    mesStr = fecha.substr(5, 2);
+    doubleMes = atof(mesStr.c_str());
+    mes = (float) doubleMes;
+    mes = mes *30;
+    diaStr = fecha.substr(8, 2);
+    doubleDia = atof(diaStr.c_str());
+    dia = (float) doubleDia;
+    vectorFecha[0] = anio;
+    vectorFecha[1] = mes;
+    vectorFecha[2] = dia;
+}
+
+float calcularDistanciaFecha(string fecha1, string fecha2){
+    float distancia = 0;
+    float *vectorFecha1 = new float[3];
+    float *vectorFecha2 = new float[3];
+    for (int i = 0; i < 3; i++){
+        vectorFecha1[i] = 0;
+        vectorFecha2[i] = 0;
+    }
+    convertirFechaEnVector(fecha1, vectorFecha1 );
+    convertirFechaEnVector(fecha2, vectorFecha2);
+    for (int i = 0; i < 3; i++) {
+        if (vectorFecha1[i] >= vectorFecha2[i])
+            distancia += vectorFecha1[i] - vectorFecha2[i];
+        else
+            distancia += vectorFecha2[i] - vectorFecha1[i];
+    }
+
+    delete [] vectorFecha1;
+    delete [] vectorFecha2;
+    return distancia;
+}
+
+float devolverNumeroSemana(string dia){
+    string vectorDias[] = {"Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"};
+
+    int i = 0;
+    for (i = 0; i < 7; i++) {
+        if(dia == vectorDias[i]){
+            return i+1;
+        }
+    }
+    return 0;
+}
+
+float calcularDistanciaDiaSemana(string fecha1, string fecha2){
+
+    float dia1 = (float)devolverNumeroSemana(fecha1);
+    float dia2 = (float)devolverNumeroSemana(fecha2);
+    float distancia = abs(dia1-dia2);
+
+    if (distancia == 4){
+        return distancia = 3;
+    }
+
+    if (distancia == 5){
+        return distancia = 2;
+    }
+
+    if (distancia == 6){
+        return distancia = 1;
+    }
+
+    return 0;
+}
+
+float calcularDistanciaCoordenadas(string coordenada1str, string coordenada2str) {
+    float coordenada1 = 0;
+    float coordenada2 = 0;
+
+    coordenada1 = abs((float)atof(coordenada1str.c_str()));
+    coordenada2 = abs((float)atof(coordenada2str.c_str()));
+    return abs(coordenada1 - coordenada2);
+
+}
+
+void calcularDistancias(string vectorAClasificar[], string vectorDelDelito[], string tipoDeDelito) {
     ofstream archivoDeDistancias;
     string nombreDelArchivoDeDistancias = "../archivos/archivoDistancias.csv";
     archivoDeDistancias.open(nombreDelArchivoDeDistancias.c_str(), std::ios::app);
-    float distancia;
-    archivoDeDistancias << tipoDeDelito;
-//    distancia = calcularDistanciaFecha(vectorAClasificar[0], vectorDelDelito[0]);
-//    archivoDeDistancias << distancia << ",";
-//    distancia = calcularDistanciaDiaSemana(vectorAClasificar[1], vectorDelDelito[1]);
-//    archivoDeDistancias << distancia << ",";
-//    distancia = calcularDistanciaCoordanadas(vectorAClasificar[2], vectorDelDelito[2]);
-//    archivoDeDistancias << distancia << ",";
-//    distancia = calcularDistanciaCoordenadas(vectorAClasificar[3], vectorDelDelito[3]);
-//    archivoDeDistancias << distancia << endl;
+    float distancia1 = 0, distancia2 = 0, distancia3 = 0, distancia4 = 0, distanciaTotal = 0;
+    archivoDeDistancias << tipoDeDelito << ",";
+    distancia1 = calcularDistanciaFecha(vectorAClasificar[0], vectorDelDelito[0]);
+    distancia2 = calcularDistanciaDiaSemana(vectorAClasificar[1], vectorDelDelito[1]);
+    distancia3 = calcularDistanciaCoordenadas(vectorAClasificar[2], vectorDelDelito[2]);
+    distancia4 = calcularDistanciaCoordenadas(vectorAClasificar[3], vectorDelDelito[3]);
+
+    distanciaTotal = sqrt((distancia1*distancia1) + (distancia2*distancia2) +(distancia3*distancia3) + (distancia4*distancia4));
+    archivoDeDistancias << distanciaTotal << endl;
+
+    archivoDeDistancias.close();
 
 }
 
@@ -244,6 +331,84 @@ void guardarProbabilidad(float probabilidad, int contador, float **matrizProbabi
     }
 }
 
+void prepararArchivoResultados(){
+    ofstream resultadosKNN;
+    string nombreDelArchivoResultados = "../archivos/resultadosKNN.csv";
+
+    resultadosKNN.open(nombreDelArchivoResultados.c_str());
+    resultadosKNN << "Id,ARSON,ASSAULT,BAD CHECKS,BRIBERY,BURGLARY,DISORDERLY CONDUCT,DRIVING UNDER THE INFLUENCE,DRUG/NARCOTIC,DRUNKENNESS,EMBEZZLEMENT,EXTORTION,FAMILY OFFENSES,FORGERY/COUNTERFEITING,FRAUD,GAMBLING,KIDNAPPING,LARCENY/THEFT,LIQUOR LAWS,LOITERING,MISSING PERSON,NON-CRIMINAL,OTHER OFFENSES,PORNOGRAPHY/OBSCENE MAT,PROSTITUTION,RECOVERED VEHICLE,ROBBERY,RUNAWAY,SECONDARY CODES,SEX OFFENSES FORCIBLE,SEX OFFENSES NON FORCIBLE,STOLEN PROPERTY,SUICIDE,SUSPICIOUS OCC,TREA,TRESPASS,VANDALISM,VEHICLE THEFT,WARRANTS,WEAPON LAWS" << endl;
+    resultadosKNN.close();
+}
+
+void obtenerDistanciaMayor(float **matrizDistancia, float *mayor) {
+    float mayorDistancia = 999; //tomo una distancia grande
+    for (int j = 0; j < 30; j++) {
+        float actual = matrizDistancia[1][j];
+        if (actual > mayorDistancia) {
+            mayorDistancia = actual;
+            mayor[0] = j; //posicion
+            mayor[1] = mayorDistancia;
+        }
+    }
+}
+
+void obtenerKDelitosMasCercanos(float distancia, float delito, int contador, float **matrizDelitos) {
+    float *mayor = new float [2];
+    mayor[0] = 0;
+    mayor[1] = 0;
+    if (contador < 30) {
+        matrizDelitos[0][contador] = delito;
+        matrizDelitos[1][contador] = distancia;
+    } else {
+        obtenerDistanciaMayor(matrizDelitos, mayor);
+        int posicionMayor = (int) mayor[0]; //OJO!!! Acordarse que devuelve la posicion en la matriz, no el ID
+        float distanciaMayor = mayor[1];
+        if (distancia < distanciaMayor){
+            matrizDelitos[0][posicionMayor] = delito;
+            matrizDelitos[1][posicionMayor] = distancia;
+        }
+    }
+}
+
+
+void aplicarKNN(int longitud, map<int, string> &indices){
+    int indiceDelito = 0;
+    ifstream archivoDistancias;
+    ofstream resultadosKNN;
+    map<string,float> diccionarioDistancias;
+    string delito;
+    string distanciaStr;
+    float distancia = 0;
+    double distanciaDouble = 0;
+    string nombreDelArchivoDeDistancias = "../archivos/archivoDistancias.csv";
+    string nombreDelArchivoResultados = "../archivos/resultadosKNN.csv";
+    float **matrizDelitosMasCercanos = new float *[2];
+    matrizDelitosMasCercanos[0] = new float [K];
+    matrizDelitosMasCercanos[1] = new float [K];
+
+    resultadosKNN.open(nombreDelArchivoResultados.c_str(), std::ios::app);
+    archivoDistancias.open(nombreDelArchivoDeDistancias.c_str());
+    for (int i = 0; i < longitud; i++){
+        getline(archivoDistancias, delito, ',');
+        getline(archivoDistancias, distanciaStr, '\n');
+        map<int, string>::iterator iterador = indices.begin();
+        while (true) {
+            if ((iterador -> second) == delito) {
+                break;
+            } else {
+                iterador ++;
+            }
+        }
+        indiceDelito = (float) (iterador -> first);
+        distanciaDouble = atof(distanciaStr.c_str());
+        distancia = (float)distanciaDouble;
+        obtenerKDelitosMasCercanos(distancia, indiceDelito, i, matrizDelitosMasCercanos);
+    }
+
+    archivoDistancias.close();
+    resultadosKNN.close();
+
+}
 void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int cantidadDelitos) {
     ifstream resultadosBayes;
     ifstream test;
@@ -253,8 +418,7 @@ void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int can
     string strID, ruta;
     string*vectorAClasificar = new string [FEATURES];
     string *vectorDelito = new string [FEATURES];
-    float *vectorDistancias = new float [FEATURES];
-    int id = 0, contador, i;
+    int id = 0, contador, i, longitud = 0;
     int numeroDelito = 0;
     double doubleProbabilidad = 0;
     float probabilidad = 0;
@@ -274,7 +438,7 @@ void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int can
         getline(test, fechaHoraTest,',');
         franjaHoraria = obtenerFranjaHoraria(fechaHoraTest);
         hora = obtenerHora(fechaHoraTest);
-        fecha = obtenerFecha(fechaHoraTest);
+        fechaTest = obtenerFecha(fechaHoraTest);
         anio = obtenerAnio(fechaHoraTest);
         getline(test, diaSemanaTest, ',');
         getline(test, descarte, ',');
@@ -282,10 +446,9 @@ void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int can
         getline(test, coordenadaXTest, ',');
         getline(test, coordenadaYTest, '\n');
         vectorAClasificar[0] = fechaTest;
-        vectorAClasificar[1] = horaTest;
-        vectorAClasificar[2] = diaSemanaTest;
-        vectorAClasificar[3] = coordenadaXTest;
-        vectorAClasificar[4] = coordenadaYTest;
+        vectorAClasificar[1] = diaSemanaTest;
+        vectorAClasificar[2] = coordenadaXTest;
+        vectorAClasificar[3] = coordenadaYTest;
         while (contador < 40) {
             if (contador == 39) {
                 getline(resultadosBayes, strProbabilidad, '\n');
@@ -301,6 +464,8 @@ void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int can
         }
         if (idTest == strID) {
             limpiarArchivoDeResultados();
+            longitud = 0;
+            cout << "Clasificando el delito: " << idTest << endl;
             for (int j = 1; j < MASPROBABLES; j ++) {
                 numeroDelito = (int) matrizProbabilidades[0][j];
                 delito = indices.at(numeroDelito);
@@ -321,11 +486,16 @@ void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int can
                     i++;
                     getline(archivoDelDelito, coordenadaY, '\n' );
                     vectorDelito[i] = coordenadaY;
-                    calcularDistancias(vectorAClasificar, vectorDelito, delito);
+                    if (fechaTest.substr(0,9) == fecha.substr(0,9)){
+                        calcularDistancias(vectorAClasificar, vectorDelito, delito);
+                        longitud ++;
 
+                    }
 
                 }
+                archivoDelDelito.close();
             }
+            aplicarKNN(longitud, indices);
         }
     }
     resultadosBayes.close();
@@ -352,9 +522,9 @@ int main() {
         matrizProbabilidades[i] = new float [MASPROBABLES];
     }
 
-
-    //inicializarMatriz(filas, MASPROBABLES, matrizProbabilidades);
-    //leerBayes(indices, matrizProbabilidades, cantidadDelitosTotales);
+    prepararArchivoResultados();
+    inicializarMatriz(filas, MASPROBABLES, matrizProbabilidades);
+    leerBayes(indices, matrizProbabilidades, cantidadDelitosTotales);
 
 
     for (int i = 0; i < filas; i++) {
