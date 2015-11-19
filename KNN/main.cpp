@@ -13,7 +13,7 @@
 const int MASPROBABLES = 6;
 const int CANTIDAD_DELITOS = 1000;
 const int FEATURES = 4;
-const int K = 30;
+const int K = 35;
 const int CANTIDAD_TEST = 884261;
 
 using namespace std;
@@ -351,7 +351,7 @@ void prepararArchivoResultados(){
 
 void obtenerDistanciaMayor(float **matrizDistancia, float *mayor) {
     float mayorDistancia = 999; //tomo una distancia grande
-    for (int j = 0; j < 30; j++) {
+    for (int j = 0; j < K; j++) {
         float actual = matrizDistancia[1][j];
         if (actual > mayorDistancia) {
             mayorDistancia = actual;
@@ -365,7 +365,7 @@ void obtenerKDelitosMasCercanos(float distancia, float delito, int contador, flo
     float *mayor = new float [2];
     mayor[0] = 0;
     mayor[1] = 0;
-    if (contador < 30) {
+    if (contador < K) {
         matrizDelitos[0][contador] = delito;
         matrizDelitos[1][contador] = distancia;
     } else {
