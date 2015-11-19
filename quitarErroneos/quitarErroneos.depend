@@ -1,0 +1,12 @@
+# depslib dependency file v1.0
+1447956003 source:/home/nacho/GigoTips/quitarErroneos/main.cpp
+	<iostream>
+	<fstream>
+	<cstdlib>
+	<map>
+	<string>
+	<cmath>
+	<set>
+	<vector>
+	<sstream>
+

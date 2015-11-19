@@ -37,14 +37,14 @@ int *crearDiccionario(map<string, int> & indices) {
     string tipoDelito, descripcion, diaSemana, distrito, fecha, franjaHoraria, descarte, linea;
     int columna;
     int *indicesFinales = new int[2];
-    archivo.open("../archivos/train.csv");
+    archivo.open("../archivos/trainCorregido.csv");
     columna = 0;
 
     llenarDelitos(indices, indicesFinales);
 
     if(archivo.fail())
     {
-        cout << "Error al abrir el archivo train.csv" << endl;
+        cout << "Error al abrir el archivo trainCorregido.csv" << endl;
     }
     getline(archivo, descarte, '\n');
     while(true)
@@ -171,11 +171,11 @@ void llenarMatrizFrecuencias(map<string, int> & indices, int **matrizFrecuencias
     ifstream archivo;
     string tipoDelito, descripcion, diaSemana, distrito, fecha, franjaHoraria, descarte, linea;
     int filaDelito, columnaHora, columnaDiaSemana, columnaDistrito;
-    archivo.open("../archivos/train.csv");
+    archivo.open("../archivos/trainCorregido.csv");
 
     if(archivo.fail())
     {
-        cout << "Error al abrir el archivo train.csv" << endl;
+        cout << "Error al abrir el archivo trainCorregido.csv" << endl;
     }
 
     getline(archivo, descarte, '\n');

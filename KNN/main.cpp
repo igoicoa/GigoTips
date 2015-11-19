@@ -109,10 +109,10 @@ void crearArchivosPorDelito(){
     ofstream archivoSalida;
     ifstream archivoVerificar;
     string fechaHora, hora, franjaHoraria, fecha, anio, categoria, diaSemana, coordenadaX, coordenadaY, descarte, ruta, strLinea;
-    archivo.open("../archivos/train.csv");
+    archivo.open("../archivos/trainCorregido.csv");
     if(archivo.fail())
     {
-        cout << "Error al abrir el archivo train.csv" << endl;
+        cout << "Error al abrir el archivo trainCorregido.csv" << endl;
     }
     getline(archivo, descarte, '\n');
     while(true){
@@ -381,63 +381,45 @@ void obtenerKDelitosMasCercanos(float distancia, float delito, int contador, flo
     delete []mayor;
 }
 
-float obtenerElDelitoMasOcurrente(float **matrizDelitosMasCercanos, float ** matrizProbabilidades){
-    float idDelitoMasOcurrente = 0;
-    map<float, int> indices;
+map<float,float> obtenerElDelitoMasOcurrente(float **matrizDelitosMasCercanos, float ** matrizProbabilidades){
+    map<float, float> indices;
     float idDelitoAInsertar = 0;
-    int frecuencia = 0;
 
     idDelitoAInsertar = matrizDelitosMasCercanos[0][0];
-    indices.insert(pair<float, int> (idDelitoAInsertar, 1));
+    indices.insert(pair<float, float> (idDelitoAInsertar, 1));
     for(int i = 1; i < K; i++){
         idDelitoAInsertar = matrizDelitosMasCercanos[0][i];
-        map<float, int>::iterator iteradorIndice = indices.find(idDelitoAInsertar);
+        map<float, float>::iterator iteradorIndice = indices.find(idDelitoAInsertar);
         if(iteradorIndice != indices.end()){
             iteradorIndice -> second++;
+            cout << iteradorIndice ->second << endl;
         }
         else{
-            indices.insert(pair<float, int> (idDelitoAInsertar, 1));
+            indices.insert(pair<float, float> (idDelitoAInsertar, 1));
         }
     }
 
-    map<float, int>::iterator iterador = indices.begin();
-    idDelitoMasOcurrente = iterador -> first;
-    frecuencia = iterador -> second;
-    float idActual = 0;
-    int frecuenciaActual = 0;
-
-    for (iterador = indices.begin(); iterador != indices.end(); iterador ++){
-        idActual = iterador -> first;
-        frecuenciaActual = iterador -> second;
-        if (frecuenciaActual > frecuencia){
-            idDelitoMasOcurrente = idActual;
-        }
-        if (frecuenciaActual == frecuencia){
-            float proba1 = 0;
-            float proba2 = 0;
-
-            for (int k = 1; k < MASPROBABLES; k ++) {
-                if (matrizProbabilidades[0][k] == idDelitoMasOcurrente){
-                    proba1 = matrizProbabilidades[1][k];
-                }
-                if (matrizProbabilidades[0][k] == idActual){
-                    proba2 = matrizProbabilidades[1][k];
-                }
-            }
-            if (proba2 > proba1){
-                idDelitoMasOcurrente = idActual;
-            }
-        }
+    map<float, float>::iterator iteradorDelitos = indices.begin();
+    while(iteradorDelitos != indices.end()) {
+        iteradorDelitos -> second = (iteradorDelitos -> second) / K;
+        iteradorDelitos ++;
+        cout << iteradorDelitos ->second << endl;
     }
-    return idDelitoMasOcurrente;
-
+    return indices;
 }
 
+void inicializarVector(float *vectorAInicializar){
+    for (int i = 0; i < 39; i++){
+        vectorAInicializar[i] = 0;
+    }
+
+}
 void aplicarKNN(int longitud, map<int, string> &indices, float **matrizProbabilidades, string id){
-    int indiceDelito = 0, idDelitoMasOcurrente = 0;
+    int indiceDelito = 0;
     ifstream archivoDistancias;
     ofstream resultadosKNN;
     map<string,float> diccionarioDistancias;
+    map<float,float> diccionarioProbabilidades;
     string delito;
     string distanciaStr;
     float distancia = 0;
@@ -473,30 +455,21 @@ void aplicarKNN(int longitud, map<int, string> &indices, float **matrizProbabili
         contador ++;
     }
 
-    //mostrarMatrizFloat(2, K, matrizDelitosMasCercanos);
-    idDelitoMasOcurrente = (int)obtenerElDelitoMasOcurrente(matrizDelitosMasCercanos, matrizProbabilidades);
-
     resultadosKNN << id << ',';
-    for(int i = 1; i < 39; i++) {
-        if (idDelitoMasOcurrente == i){
-            resultadosKNN << 1 << ',';
-        }
-        else {
-            resultadosKNN << 0 << ',';
-        }
-    }
-    if (idDelitoMasOcurrente == 39){
-        resultadosKNN << 1;
-    }
-    else {
-        resultadosKNN << 0;
+    diccionarioProbabilidades = obtenerElDelitoMasOcurrente(matrizDelitosMasCercanos, matrizProbabilidades);
+    map<float,float>::iterator iteradorDelitos = diccionarioProbabilidades.begin();
+    float *vectorAAlmacenar = new float[39];
+    inicializarVector(vectorAAlmacenar);
+    int j = 0;
+    while (iteradorDelitos != diccionarioProbabilidades.end()){
+        j = iteradorDelitos -> first;
+        vectorAAlmacenar[j] = iteradorDelitos -> second;
     }
 
-    int idDelito = atoi(id.c_str());
-
-    if (idDelito != CANTIDAD_TEST){
-        resultadosKNN << endl;
+    for (int i = 0; i < 39; i++){
+        resultadosKNN << vectorAAlmacenar[i] << ',';
     }
+    resultadosKNN << vectorAAlmacenar[39] << endl;
 
     archivoDistancias.close();
     resultadosKNN.close();
@@ -505,6 +478,7 @@ void aplicarKNN(int longitud, map<int, string> &indices, float **matrizProbabili
         delete [] matrizDelitosMasCercanos[i];
     }
     delete [] matrizDelitosMasCercanos;
+    delete [] vectorAAlmacenar;
 
 }
 
