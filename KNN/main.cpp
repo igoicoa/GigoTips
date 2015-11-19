@@ -336,6 +336,8 @@ void guardarProbabilidad(float probabilidad, int contador, float **matrizProbabi
             matrizProbabilidades[1][posicionMenor] = probabilidad;
         }
     }
+    //Elimine este vector que no lo habiamos borrado
+    delete []menor;
 }
 
 void prepararArchivoResultados(){
@@ -375,6 +377,8 @@ void obtenerKDelitosMasCercanos(float distancia, float delito, int contador, flo
             matrizDelitos[1][posicionMayor] = distancia;
         }
     }
+    //Elimine este vector que no lo habiamos borrado.
+    delete []mayor;
 }
 
 float obtenerElDelitoMasOcurrente(float **matrizDelitosMasCercanos, float ** matrizProbabilidades){
@@ -503,6 +507,8 @@ void aplicarKNN(int longitud, map<int, string> &indices, float **matrizProbabili
     delete [] matrizDelitosMasCercanos;
 
 }
+
+
 void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int cantidadDelitos) {
     ifstream resultadosBayes;
     ifstream test;
@@ -510,7 +516,7 @@ void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int can
     string descarte, strProbabilidad, idTest, fechaHora, fecha, hora, anio, franjaHoraria, diaSemana, coordenadaX, coordenadaY, delito;
     string fechaHoraTest, fechaTest, horaTest, diaSemanaTest,coordenadaXTest, coordenadaYTest;
     string strID, ruta;
-    string*vectorAClasificar = new string [FEATURES];
+    string *vectorAClasificar = new string [FEATURES];
     string *vectorDelito = new string [FEATURES];
     int id = 0, contador, i, longitud = 0;
     int numeroDelito = 0;
@@ -518,6 +524,8 @@ void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int can
     float probabilidad = 0;
     test.open("../archivos/test.csv");
     resultadosBayes.open("../archivos/resultadosBayes.csv");
+
+    int contadorCouts = 0;
 
     getline(resultadosBayes, descarte, '\n');
     getline(test, descarte, '\n');
@@ -559,7 +567,10 @@ void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int can
         if (idTest == strID) {
             limpiarArchivoDeResultados();
             longitud = 0;
-            cout << "Clasificando el delito: " << idTest << endl;
+            if(contadorCouts == 1000){
+                cout << idTest << endl;
+                contadorCouts = 0;
+            }
             for (int j = 1; j < MASPROBABLES; j ++) {
                 numeroDelito = (int) matrizProbabilidades[0][j];
                 delito = indices.at(numeroDelito);
@@ -590,9 +601,13 @@ void leerBayes(map<int, string> & indices, float **matrizProbabilidades, int can
                 archivoDelDelito.close();
             }
             aplicarKNN(longitud, indices, matrizProbabilidades, idTest);
+            contadorCouts ++;
         }
     }
     resultadosBayes.close();
+    //Elimine estos vectores que faltaban
+    delete []vectorAClasificar;
+    delete []vectorDelito;
 }
 
 int main() {
