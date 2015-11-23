@@ -10,3 +10,14 @@
 	<vector>
 	<sstream>
 
+1448048128 source:/home/noe/GigoTips/quitarErroneos/main.cpp
+	<iostream>
+	<fstream>
+	<cstdlib>
+	<map>
+	<string>
+	<cmath>
+	<set>
+	<vector>
+	<sstream>
+

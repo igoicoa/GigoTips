@@ -21,7 +21,7 @@
 	<vector>
 	<sstream>
 
-1447251602 source:/home/noe/GigoTips/Bayes/main.cpp
+1448304024 source:/home/noe/GigoTips/Bayes/main.cpp
 	<iostream>
 	<fstream>
 	<cstdlib>
@@ -33,6 +33,17 @@
 	<sstream>
 
 1447350765 source:/home/nacho/GigoTips/Bayes/main.cpp
+	<iostream>
+	<fstream>
+	<cstdlib>
+	<map>
+	<string>
+	<cmath>
+	<set>
+	<vector>
+	<sstream>
+
+1448310648 source:/home/noe/GigoTips/Bayes_old/main.cpp
 	<iostream>
 	<fstream>
 	<cstdlib>

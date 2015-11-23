@@ -8,11 +8,14 @@
 #include <vector>
 #include <sstream>
 
-const int CARACTERISTICAS = 21;
+const int CARACTERISTICAS = 69;
 using namespace std;
 
 bool tieneComilla(string linea);
 string obtenerFranjaHoraria(string fecha);
+string obtenerAnio(string fecha);
+string obtenerMes(string fecha);
+string obtenerSemana(string fecha);
 
 void llenarDelitos(map<string, int> & indices, int *indicesFinales){
     ifstream archivoDelitos;
@@ -34,7 +37,7 @@ void llenarDelitos(map<string, int> & indices, int *indicesFinales){
 }
 int *crearDiccionario(map<string, int> & indices) {
     ifstream archivo;
-    string tipoDelito, descripcion, diaSemana, distrito, fecha, franjaHoraria, descarte, linea;
+    string tipoDelito, descripcion, diaSemana, distrito, fecha, franjaHoraria, descarte, linea, anio, mes, semana;
     int columna;
     int *indicesFinales = new int[2];
     archivo.open("../archivos/trainCorregido.csv");
@@ -52,6 +55,9 @@ int *crearDiccionario(map<string, int> & indices) {
         if (archivo.eof()) break;
         getline(archivo, fecha,',');
         franjaHoraria = obtenerFranjaHoraria(fecha);
+        anio = obtenerAnio(fecha);
+        mes = obtenerMes(fecha);
+        semana = obtenerSemana(fecha);
         getline(archivo, tipoDelito, ',' );
         getline(archivo, descripcion, ',' );
             if (tieneComilla(descripcion))
@@ -69,15 +75,33 @@ int *crearDiccionario(map<string, int> & indices) {
             indices.insert(pair<string, int> (franjaHoraria, columna));
             columna += 1;
         }
-
-        map<string, int>::iterator iteradorIndiceColumna2 = indices.find(diaSemana);
+        map<string, int>::iterator iteradorIndiceColumna1 = indices.find(anio);
+        if(iteradorIndiceColumna1 == indices.end())
+        {
+            indices.insert(pair<string, int> (anio, columna));
+            columna += 1;
+        }
+          map<string, int>::iterator iteradorIndiceColumna2 = indices.find(mes);
         if(iteradorIndiceColumna2 == indices.end())
+        {
+            indices.insert(pair<string, int> (mes, columna));
+            columna += 1;
+        }
+        map<string, int>::iterator iteradorIndiceColumna3 = indices.find(semana);
+        if(iteradorIndiceColumna3 == indices.end())
+        {
+            indices.insert(pair<string, int> (semana, columna));
+            columna += 1;
+        }
+
+        map<string, int>::iterator iteradorIndiceColumna4 = indices.find(diaSemana);
+        if(iteradorIndiceColumna4 == indices.end())
         {
             indices.insert(pair<string, int> (diaSemana, columna));
             columna += 1;
         }
-        map<string, int>::iterator iteradorIndiceColumna3 = indices.find(distrito);
-        if(iteradorIndiceColumna3 == indices.end())
+        map<string, int>::iterator iteradorIndiceColumna5 = indices.find(distrito);
+        if(iteradorIndiceColumna5 == indices.end())
 
         {
             indices.insert(pair<string, int> (distrito, columna));
@@ -108,35 +132,160 @@ bool tieneComilla(string linea)
         return false;
 }
 
+string obtenerAnio(string fecha){
+    string anioStr;
+    anioStr = fecha.substr(0, 4);
+
+    return anioStr;
+
+}
+
+string obtenerMes(string fecha){
+    string mesStr;
+    mesStr = fecha.substr(5,2);
+    if(mesStr == "01"){
+        return "Enero";
+    }
+    if(mesStr == "02"){
+        return "Febrero";
+    }
+    if(mesStr == "03"){
+        return "Marzo";
+    }
+     if(mesStr == "04"){
+        return "Abril";
+    }
+     if(mesStr == "05"){
+        return "Mayo";
+    }
+     if(mesStr == "06"){
+        return "Junio";
+    }
+     if(mesStr == "07"){
+        return "Julio";
+    }
+     if(mesStr == "08"){
+        return "Agosto";
+    }
+     if(mesStr == "09"){
+        return "Septiembre";
+    }
+     if(mesStr == "10"){
+        return "Octubre";
+    }
+     if(mesStr == "11"){
+        return "Noviembre";
+    }
+     if(mesStr == "12"){
+        return "Diciembre";
+    }
+
+    return 0;
+
+}
+
 string obtenerFranjaHoraria(string fecha)
 {
     string horaStr;
     string franja;
     horaStr = fecha.substr(11, 2);
     int hora = atoi(horaStr.c_str());
-    if (hora < 7)
-    {
-        franja = "Madrugada";
-    }
 
-    if ((hora >= 7) && (hora < 12))
-    {
-        franja = "Maniana";
+    if ((hora >= 0) && (hora < 1)){
+        franja = "00";
+    }else if ((hora >= 1) && (hora < 2)){
+        franja = "01";
     }
-
-    if ((hora >= 12) && (hora < 18))
-    {
-        franja = "Tarde";
+    else if ((hora >= 2) && (hora < 3)){
+        franja = "02";
     }
-
-    if ((hora >= 18) && (hora < 24))
-    {
-        franja = "Noche";
+    else if ((hora >= 3) && (hora < 4)){
+        franja = "03";
+    }
+    else if ((hora >= 4) && (hora < 5)){
+        franja = "04";
+    }
+    else if ((hora >= 5) && (hora < 6)){
+        franja = "05";
+    }
+    else if ((hora >= 6) && (hora < 7)){
+        franja = "06";
+    }
+    else if ((hora >= 7) && (hora < 8)){
+        franja = "07";
+    }
+    else if ((hora >= 8) && (hora < 9)){
+        franja = "08";
+    }
+    else if ((hora >= 9) && (hora < 10)){
+        franja = "09";
+    }
+    else if ((hora >= 10) && (hora < 11)){
+        franja = "10";
+    }
+    else if ((hora >= 11) && (hora < 12)){
+        franja = "11";
+    }
+    else if ((hora >= 12) && (hora < 13)){
+        franja = "12";
+    }
+    else if ((hora >= 13) && (hora < 14)){
+        franja = "13";
+    }
+    else if ((hora >= 14) && (hora < 15)){
+        franja = "14";
+    }
+    else if ((hora >= 15) && (hora < 16)){
+        franja = "15";
+    }
+    else if ((hora >= 16) && (hora < 17)){
+        franja = "16";
+    }
+    else if ((hora >= 17) && (hora < 18)){
+        franja = "17";
+    }
+    else if ((hora >= 18) && (hora < 19)){
+        franja = "18";
+    }
+    else if ((hora >= 19) && (hora < 20)){
+        franja = "19";
+    }
+    else if ((hora >= 20) && (hora < 21)){
+        franja = "20";
+    }
+    else if ((hora >= 21) && (hora < 22)){
+        franja = "21";
+    }
+    else if ((hora >= 22) && (hora < 23)){
+        franja = "22";
+    }
+    else if (hora >= 23){
+        franja = "23";
     }
 
     return franja;
 }
 
+string obtenerSemana(string fecha){
+    string diaStr;
+    diaStr = fecha.substr(8, 2);
+    int dia = atoi(diaStr.c_str());
+
+    if((dia >=1) && (dia <8)){
+        return "Semana 1";
+    }
+    if((dia >=8) && (dia <15)){
+        return "Semana 2";
+    }
+    if((dia >=15) && (dia <22)){
+        return "Semana 3";
+    }
+    if((dia >=22) && (dia <32)){
+        return "Semana 4";
+    }
+    return 0;
+
+}
 void inicializarMatriz(int filas,int columnas,int **matriz) {
     for(int i = 0; i < filas; i++){
         for(int j = 0; j < columnas; j++){
@@ -169,8 +318,8 @@ void mostrarMatrizFloat(int filas, int columnas, float **matriz) {
 
 void llenarMatrizFrecuencias(map<string, int> & indices, int **matrizFrecuencias, int *vectorFrecuencias) {
     ifstream archivo;
-    string tipoDelito, descripcion, diaSemana, distrito, fecha, franjaHoraria, descarte, linea;
-    int filaDelito, columnaHora, columnaDiaSemana, columnaDistrito;
+    string tipoDelito, descripcion, diaSemana, distrito, fecha, franjaHoraria, descarte, linea, anio, mes,semana;
+    int filaDelito, columnaHora, columnaDiaSemana, columnaDistrito, columnaAnio, columnaMes, columnaSemana;
     archivo.open("../archivos/trainCorregido.csv");
 
     if(archivo.fail())
@@ -186,6 +335,9 @@ void llenarMatrizFrecuencias(map<string, int> & indices, int **matrizFrecuencias
 
         getline(archivo, fecha,',');
         franjaHoraria = obtenerFranjaHoraria(fecha);
+        anio = obtenerAnio(fecha);
+        mes = obtenerMes(fecha);
+        semana = obtenerSemana(fecha);
         getline(archivo, tipoDelito, ',' );
         getline(archivo, descripcion, ',' );
             if (tieneComilla(descripcion))
@@ -201,10 +353,16 @@ void llenarMatrizFrecuencias(map<string, int> & indices, int **matrizFrecuencias
           para llenar la posicion [fila][columna] de la matriz con +1 */
         filaDelito = indices[tipoDelito];
         columnaHora = indices[franjaHoraria];
+        columnaAnio = indices[anio];
+        columnaMes = indices[mes];
+        columnaSemana = indices[semana];
         columnaDiaSemana = indices[diaSemana];
         columnaDistrito = indices[distrito];
         //cout << filaDelito << endl;
         matrizFrecuencias[filaDelito][columnaHora] +=1;
+        matrizFrecuencias[filaDelito][columnaAnio] +=1;
+        matrizFrecuencias[filaDelito][columnaMes] +=1;
+        matrizFrecuencias[filaDelito][columnaSemana] +=1;
         matrizFrecuencias[filaDelito][columnaDiaSemana] += 1;
         matrizFrecuencias[filaDelito][columnaDistrito] += 1;
         vectorFrecuencias[filaDelito] += 1;
@@ -269,13 +427,25 @@ void calculoDeProbabilidades(int columnas, int filas, int **matrizFrec, float **
     }
 }
 
-void clasificarDelito(float **matrizProbabilidades, float *vectorResultados, float *vectorProbabilidades, string franjaHoraria, string diaSemana, string distrito, int filas, map<string, int> & indices) {
-    int j = 0, k = 0, l = 0;
+void clasificarDelito(float **matrizProbabilidades, float *vectorResultados, float *vectorProbabilidades, string franjaHoraria, string diaSemana, string distrito, int filas, map<string, int> & indices, string anio, string mes, string semana) {
+    int j = 0, k = 0, l = 0, m = 0, n = 0, o = 0;
 
     for(int i = 0; i < filas; i++) {
         map<string, int>::iterator iteradorIndice = indices.find(franjaHoraria);
         if (iteradorIndice != indices.end()){
             j = iteradorIndice -> second;
+        }
+        iteradorIndice = indices.find(anio);
+        if(iteradorIndice!=indices.end()){
+            m = iteradorIndice -> second;
+        }
+        iteradorIndice = indices.find(mes);
+        if (iteradorIndice != indices.end()){
+            n = iteradorIndice -> second;
+        }
+        iteradorIndice = indices.find(semana);
+        if(iteradorIndice!=indices.end()){
+            o = iteradorIndice -> second;
         }
         iteradorIndice = indices.find(diaSemana);
         if (iteradorIndice != indices.end()){
@@ -286,14 +456,14 @@ void clasificarDelito(float **matrizProbabilidades, float *vectorResultados, flo
             l = iteradorIndice -> second;
         }
 
-        vectorResultados[i] = (vectorProbabilidades[i]) * (matrizProbabilidades[i][j]) * (matrizProbabilidades[i][k]) * (matrizProbabilidades[i][l]);
+        vectorResultados[i] = (vectorProbabilidades[i]) * (matrizProbabilidades[i][j]) * (matrizProbabilidades[i][k]) * (matrizProbabilidades[i][l])*(matrizProbabilidades[i][m])*(matrizProbabilidades[i][n])*(matrizProbabilidades[i][o]);
     }
 }
 
 void clasificacion(int filas, int columnas, float **matrizProbabilidades, float *vectorProbabilidades, map<string, int> & indices){
     ifstream archivo;
     ofstream archivoSalida;
-    string id, fecha, diaSemana, distrito, descarte, franjaHoraria;
+    string id, fecha, diaSemana, distrito, descarte, franjaHoraria, anio, mes, semana;
     float *vectorResultados = new float [filas];
     inicializarVectorFloat(filas, vectorResultados);
 
@@ -317,11 +487,14 @@ void clasificacion(int filas, int columnas, float **matrizProbabilidades, float 
         getline(archivo, id, ',');
         getline(archivo, fecha,',');
         franjaHoraria = obtenerFranjaHoraria(fecha);
+        anio = obtenerAnio(fecha);
+        mes = obtenerMes(fecha);
+        semana = obtenerSemana(fecha);
         getline(archivo, diaSemana, ',' );
         getline(archivo, distrito, ',');
         getline(archivo, descarte, '\n');
 
-        clasificarDelito(matrizProbabilidades, vectorResultados, vectorProbabilidades, franjaHoraria, diaSemana, distrito, filas, indices);
+        clasificarDelito(matrizProbabilidades, vectorResultados, vectorProbabilidades, franjaHoraria, diaSemana, distrito, filas, indices, anio,mes, semana);
 
         archivoSalida << id << ',';
         for(int i = 0; i < filas-1; i++) {
