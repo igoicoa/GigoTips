@@ -1,0 +1,12 @@
+# depslib dependency file v1.0
+1448567629 source:/home/nacho/GigoTips/Merge/main.cpp
+	<iostream>
+	<fstream>
+	<cstdlib>
+	<map>
+	<string>
+	<cmath>
+	<set>
+	<vector>
+	<sstream>
+
