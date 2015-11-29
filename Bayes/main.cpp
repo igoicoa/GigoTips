@@ -9,6 +9,8 @@
 #include <sstream>
 
 const int CARACTERISTICAS = 69;
+const int CANTIDAD_TRAIN = 877982;
+const int CANTIDAD_DELITOS = 39;
 using namespace std;
 
 bool tieneComilla(string linea);
@@ -16,6 +18,13 @@ string obtenerFranjaHoraria(string fecha);
 string obtenerAnio(string fecha);
 string obtenerMes(string fecha);
 string obtenerSemana(string fecha);
+
+void inicializarVectorFloat (int posiciones, float *vectora) {
+    float cero = 0;
+    for (int i = 0; i < posiciones; i++) {
+        vectora[i] = cero;
+    }
+}
 
 void llenarDelitos(map<string, int> & indices, int *indicesFinales){
     ifstream archivoDelitos;
@@ -35,6 +44,38 @@ void llenarDelitos(map<string, int> & indices, int *indicesFinales){
     archivoDelitos.close();
     indicesFinales[0] = fila;
 }
+
+void contabilizarDelitos(float *probabilidadDelitos){
+    ifstream cantidadDelitos;
+    string delito;
+    string cantidadDelitoStr;
+    double cantidadDelitoDbl = 0;
+    float cantidadDelito = 0;
+    int i = 0;
+    cantidadDelitos.open("../archivos/cantidadDelitos.csv");
+
+    if(cantidadDelitos.fail()){
+        cout << "Error al abrir el archivo cantidadDelitos.csv";
+    }
+
+    inicializarVectorFloat(CANTIDAD_DELITOS, probabilidadDelitos);
+    while(true) {
+        if (cantidadDelitos.eof()) break;
+        getline(cantidadDelitos, delito, ',');
+        getline(cantidadDelitos, cantidadDelitoStr, '\n');
+        cantidadDelitoDbl = atof(cantidadDelitoStr.c_str());
+        cantidadDelito = (float)cantidadDelitoDbl;
+        probabilidadDelitos[i] = cantidadDelito/CANTIDAD_TRAIN;
+        i ++;
+    }
+
+    cantidadDelitos.close();
+
+    for (int j = 0; j < 39; j++) {
+        cout << probabilidadDelitos[j] << endl;
+    }
+}
+
 int *crearDiccionario(map<string, int> & indices) {
     ifstream archivo;
     string tipoDelito, descripcion, diaSemana, distrito, fecha, franjaHoraria, descarte, linea, anio, mes, semana;
@@ -380,13 +421,6 @@ void llenarVector(int filas, int columnas, float *vectorSumaColumnas, int **matr
     }
 }
 
-void inicializarVectorFloat (int posiciones, float *vectora) {
-    float cero = 0;
-    for (int i = 0; i < posiciones; i++) {
-        vectora[i] = cero;
-    }
-}
-
 void inicializarVectorInt (int posiciones, int *vectora) {
     int cero = 0;
     for (int i = 0; i < posiciones; i++) {
@@ -456,11 +490,11 @@ void clasificarDelito(float **matrizProbabilidades, float *vectorResultados, flo
             l = iteradorIndice -> second;
         }
 
-        vectorResultados[i] = (vectorProbabilidades[i]) * (matrizProbabilidades[i][j]) * (matrizProbabilidades[i][k]) * (matrizProbabilidades[i][l])*(matrizProbabilidades[i][m])*(matrizProbabilidades[i][n])*(matrizProbabilidades[i][o]);
+        vectorResultados[i] = log(vectorProbabilidades[i]) + log(matrizProbabilidades[i][j]) + log(matrizProbabilidades[i][k]) + log(matrizProbabilidades[i][l]) + log(matrizProbabilidades[i][m]) + log(matrizProbabilidades[i][n]) + log(matrizProbabilidades[i][o]);
     }
 }
 
-void clasificacion(int filas, int columnas, float **matrizProbabilidades, float *vectorProbabilidades, map<string, int> & indices){
+void clasificacion(int filas, int columnas, float **matrizProbabilidades, float *vectorProbabilidades, map<string, int> & indices, float *probabilidadDelitos){
     ifstream archivo;
     ofstream archivoSalida;
     string id, fecha, diaSemana, distrito, descarte, franjaHoraria, anio, mes, semana;
@@ -498,7 +532,7 @@ void clasificacion(int filas, int columnas, float **matrizProbabilidades, float 
 
         archivoSalida << id << ',';
         for(int i = 0; i < filas-1; i++) {
-            archivoSalida << vectorResultados[i] << ',';
+            archivoSalida << vectorResultados[i] * probabilidadDelitos[i] << ',';
         }
         archivoSalida << vectorResultados[filas-1];
         cout << "clasifico y escribio delito " << contador << endl;
@@ -517,7 +551,7 @@ int main() {
     indicesFinales = crearDiccionario(indices); //Creamos el diccionario de los indices de la matriz
     filas = indicesFinales[0];
     columnas = indicesFinales[1];
-
+    float *probabilidadDelitos = new float[CANTIDAD_DELITOS];
     int** matrizFrecuencias =  new int *[filas];
     for (int i = 0; i < filas; i++) {
         matrizFrecuencias[i] = new int [columnas];
@@ -526,7 +560,9 @@ int main() {
     inicializarVectorInt(filas, vectorFrecuencias); //Tiene las frecuencias de cada delito
 
     inicializarMatriz(filas, columnas, matrizFrecuencias);
+    contabilizarDelitos(probabilidadDelitos);
     llenarMatrizFrecuencias(indices, matrizFrecuencias, vectorFrecuencias);
+
     //mostrarMatrizInt(filas, columnas, matrizFrecuencias);
 
     float** matrizProbabilidades =  new float *[filas];
@@ -543,7 +579,7 @@ int main() {
 
     //llenarMatrizProbabilidades(filas, columnas, matrizProbabilidades, matrizFrecuencias);
     //mostrarMatrizFloat(filas, columnas, matrizProbabilidades);
-    clasificacion(filas, columnas, matrizProbabilidades, vectorProbabilidades, indices);
+    clasificacion(filas, columnas, matrizProbabilidades, vectorProbabilidades, indices, probabilidadDelitos);
 
     for (int i = 0; i < filas; i++) {
         delete [] matrizFrecuencias[i];
@@ -556,5 +592,6 @@ int main() {
     delete [] matrizProbabilidades;
     delete [] vectorFrecuencias;
     delete [] vectorProbabilidades;
+    delete [] probabilidadDelitos;
     return 0;
 }
